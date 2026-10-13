@@ -19,6 +19,9 @@ function _is_duplicate(url) {
 // === Global serialization lock — only ONE forward in-flight at a time ===
 let _forwarding_lock = false;
 
+// === Alt-Key Bypass Support (hold ALT to allow browser native download) ===
+let _alt_bypass_until = 0;
+
 // Load initial state
 browser.storage.local.get(["interceptEnabled"]).then((result) => {
   if (typeof result.interceptEnabled === "boolean") {
@@ -103,6 +106,12 @@ browser.downloads.onCreated.addListener((downloadItem) => {
     return;
   }
 
+  // Check Alt-key bypass
+  if (Date.now() < _alt_bypass_until) {
+    console.log("DLite: [skip] Alt key bypass active, allowing browser download:", downloadItem.url);
+    return;
+  }
+
   const fileSize = downloadItem.totalBytes || downloadItem.fileSize || 0;
 
   // Skip very small files
@@ -182,6 +191,11 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
 
 // --- Handle messages from content script and popup ---
 browser.runtime.onMessage.addListener((message, sender) => {
+  if (message.type === "alt-bypass") {
+    _alt_bypass_until = Date.now() + 3000;
+    console.log("DLite: [alt-bypass] Alt key pressed, native browser download allowed");
+    return;
+  }
   if (message.type === "manual-download" && message.url) {
     console.log("DLite: [message] manual-download from content/popup:", message.url);
     sendToDesktopApp({

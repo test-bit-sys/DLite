@@ -452,6 +452,29 @@ class Downloader:
                 # Trim file to actual size (remove preallocation padding)
                 self._trim_file()
                 task.status = DownloadStatus.COMPLETED
+
+                # Checksum verification & calculation
+                if os.path.isfile(task.dest_path):
+                    try:
+                        from engine.checksum import calculate_file_hashes, verify_checksum
+                        if task.expected_checksum:
+                            matched = verify_checksum(task.dest_path, task.expected_checksum)
+                            task.checksum_verified = matched
+                            hashes = calculate_file_hashes(task.dest_path)
+                            task.actual_checksum = hashes.get("sha256", "")
+                            if not matched:
+                                log.warning(
+                                    "Checksum mismatch for %s: expected %s, got %s",
+                                    task.id,
+                                    task.expected_checksum,
+                                    task.actual_checksum,
+                                )
+                        elif config.get("auto_calc_checksum", False):
+                            hashes = calculate_file_hashes(task.dest_path)
+                            task.actual_checksum = hashes.get("sha256", "")
+                    except Exception as ce:
+                        log.warning("Checksum calculation failed for %s: %s", task.id, ce)
+
                 bus.emit("task_completed", task)
             else:
                 task.status = DownloadStatus.PAUSED

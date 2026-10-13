@@ -12,7 +12,7 @@ except ImportError:
     winreg = None  # Non-Windows platform
 
 from PyQt6.QtCore import Qt, QTimer, QObject, pyqtSignal, QSize, QPointF, QRectF
-from PyQt6.QtGui import QAction, QIcon, QFont, QColor, QPainter, QPen, QBrush, QPainterPath
+from PyQt6.QtGui import QAction, QIcon, QFont, QColor, QPainter, QPen, QBrush, QPainterPath, QActionGroup
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QToolBar, QLineEdit,
     QTableWidget, QTableWidgetItem, QProgressBar, QSystemTrayIcon, QMenu,
@@ -363,6 +363,14 @@ class SettingsDialog(QDialog):
         self.theme_combo.addItems(["dark", "light"])
         self.theme_combo.setCurrentText(config.get("theme", "dark"))
         gen_layout.addRow("Theme:", self.theme_combo)
+
+        self.language_combo = QComboBox()
+        self.language_combo.addItem("English", "en")
+        self.language_combo.addItem("العربية (Arabic)", "ar")
+        current_lang = config.get("language", "en")
+        idx = 1 if current_lang == "ar" else 0
+        self.language_combo.setCurrentIndex(idx)
+        gen_layout.addRow("Language / اللغة:", self.language_combo)
 
         self.minimize_tray_check = QCheckBox("Minimize to system tray")
         self.minimize_tray_check.setChecked(config.get("minimize_to_tray", True))
@@ -764,6 +772,7 @@ class SettingsDialog(QDialog):
         config.set("max_concurrent_downloads", self.max_concurrent_spin.value())
         config.set("max_segments", self.max_segments_spin.value())
         config.set("theme", self.theme_combo.currentText())
+        config.set("language", self.language_combo.currentData())
         config.set("minimize_to_tray", self.minimize_tray_check.isChecked())
         config.set("auto_start_downloads", self.auto_start_check.isChecked())
         config.set("speed_limit_kbps", self.speed_limit_spin.value())
@@ -791,6 +800,8 @@ class MainWindow(QMainWindow):
 
         self._row_of_task: dict[str, int] = {}
         self._last_sample: dict[str, tuple] = {}  # task_id -> (bytes, timestamp)
+        self._auto_action = config.get("action_on_complete", "none")
+        self._shutdown_dialog_active = False
 
         self._build_menu_bar()
         self._build_toolbar()
@@ -818,6 +829,9 @@ class MainWindow(QMainWindow):
         for task in queue_manager.tasks.values():
             self._add_row(task)
         self._update_categories()
+
+        # Accept Drag and Drop (links, .txt batch files)
+        self.setAcceptDrops(True)
 
         # Refresh timer
         self.refresh_timer = QTimer(self)
@@ -873,6 +887,26 @@ class MainWindow(QMainWindow):
         clear_completed.setShortcut("Ctrl+Shift+D")
         clear_completed.triggered.connect(self._clear_completed)
         dl_menu.addAction(clear_completed)
+
+        dl_menu.addSeparator()
+
+        auto_menu = dl_menu.addMenu("⚡ When All Downloads Finish")
+        self._action_group = QActionGroup(self)
+        self._action_group.setExclusive(True)
+
+        actions_def = [
+            ("none", "Do Nothing"),
+            ("exit", "Exit DLite"),
+            ("sleep", "Sleep Computer"),
+            ("shutdown", "Shut Down Computer"),
+        ]
+        for act_key, act_label in actions_def:
+            act = QAction(act_label, self)
+            act.setCheckable(True)
+            act.setChecked(self._auto_action == act_key)
+            act.triggered.connect(lambda checked, k=act_key: self._set_auto_action(k))
+            self._action_group.addAction(act)
+            auto_menu.addAction(act)
 
         # Help menu
         help_menu = menubar.addMenu("&Help")
@@ -958,6 +992,7 @@ class MainWindow(QMainWindow):
         self.table.setShowGrid(False)
         self.table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.table.customContextMenuRequested.connect(self._show_context_menu)
+        self.table.cellDoubleClicked.connect(self._on_cell_double_clicked)
 
         # Column sizing
         header = self.table.horizontalHeader()
@@ -1116,6 +1151,7 @@ class MainWindow(QMainWindow):
                         referrer=result_dict["referrer"],
                         mime=result_dict["mime"],
                         total_size=result_dict["total_size"],
+                        expected_checksum=result_dict.get("expected_checksum", ""),
                     )
                     # Apply user preferences
                     config.set("download_dir", result_dict["save_path"])
@@ -1247,6 +1283,13 @@ class MainWindow(QMainWindow):
         open_file = menu.addAction("📄 Open file")
         open_file.triggered.connect(lambda: self._open_downloaded_file(ids[0]))
 
+        if len(ids) == 1:
+            task = queue_manager.tasks.get(ids[0])
+            if task and task.status == DownloadStatus.COMPLETED and os.path.exists(task.dest_path):
+                menu.addSeparator()
+                checksum_action = menu.addAction("🛡️ Checksum & File Integrity...")
+                checksum_action.triggered.connect(lambda: self._show_checksum_dialog(ids[0]))
+
         menu.addSeparator()
 
         remove_action = menu.addAction("🗑 Remove from list")
@@ -1257,22 +1300,139 @@ class MainWindow(QMainWindow):
 
         menu.exec(self.table.viewport().mapToGlobal(pos))
 
+    def _show_checksum_dialog(self, task_id: str):
+        task = queue_manager.tasks.get(task_id)
+        if not task or not os.path.exists(task.dest_path):
+            QMessageBox.warning(self, "Checksum", "Downloaded file not found on disk.")
+            return
+        from gui.checksum_dialog import ChecksumDialog
+        dlg = ChecksumDialog(
+            parent=self,
+            filepath=task.dest_path,
+            filename=task.filename,
+            expected_hash=getattr(task, "expected_checksum", "") or "",
+        )
+        dlg.exec()
+
+    def _on_cell_double_clicked(self, row, _col):
+        for task_id, r in self._row_of_task.items():
+            if r == row:
+                task = queue_manager.tasks.get(task_id)
+                if task and task.status == DownloadStatus.COMPLETED and os.path.exists(task.dest_path):
+                    self._open_downloaded_file(task_id)
+                elif task:
+                    self._open_file_location(task_id)
+                break
+
     def _open_file_location(self, task_id):
         task = queue_manager.tasks.get(task_id)
-        if task and os.path.exists(task.dest_path):
-            folder = os.path.dirname(task.dest_path)
-            if sys.platform == "win32":
-                os.startfile(folder)
-            else:
-                subprocess.Popen(["xdg-open", folder])
+        if task:
+            target = task.dest_path if os.path.exists(task.dest_path) else (task.save_path or str(config.download_dir))
+            if os.path.exists(target):
+                folder = target if os.path.isdir(target) else os.path.dirname(target)
+                if sys.platform == "win32":
+                    os.startfile(folder)
+                elif sys.platform == "darwin":
+                    subprocess.Popen(["open", folder])
+                else:
+                    subprocess.Popen(["xdg-open", folder])
 
     def _open_downloaded_file(self, task_id):
         task = queue_manager.tasks.get(task_id)
         if task and task.status == DownloadStatus.COMPLETED and os.path.exists(task.dest_path):
             if sys.platform == "win32":
                 os.startfile(task.dest_path)
+            elif sys.platform == "darwin":
+                subprocess.Popen(["open", task.dest_path])
             else:
                 subprocess.Popen(["xdg-open", task.dest_path])
+
+    def _set_auto_action(self, action: str):
+        self._auto_action = action
+        config.set("action_on_complete", action)
+
+    def _check_auto_finish_action(self):
+        if self._auto_action == "none" or self._shutdown_dialog_active:
+            return
+        has_active = any(
+            t.status in (DownloadStatus.DOWNLOADING, DownloadStatus.CONNECTING, DownloadStatus.QUEUED)
+            for t in queue_manager.tasks.values()
+        )
+        if not has_active and len(queue_manager.tasks) > 0:
+            self._shutdown_dialog_active = True
+            from gui.shutdown_dialog import ShutdownCountdownDialog
+            dlg = ShutdownCountdownDialog(parent=self, action=self._auto_action, timeout_seconds=30)
+            dlg.exec()
+            self._shutdown_dialog_active = False
+            self._set_auto_action("none")
+            if hasattr(self, "_action_group"):
+                for act in self._action_group.actions():
+                    if act.text() == "Do Nothing":
+                        act.setChecked(True)
+                        break
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls() or event.mimeData().hasText():
+            event.acceptProposedAction()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event):
+        urls_to_add = []
+        if event.mimeData().hasUrls():
+            for qurl in event.mimeData().urls():
+                if qurl.isLocalFile():
+                    local_path = qurl.toLocalFile()
+                    if local_path.lower().endswith(".txt"):
+                        try:
+                            with open(local_path, "r", encoding="utf-8") as f:
+                                for line in f:
+                                    line_str = line.strip()
+                                    if line_str and not line_str.startswith("#"):
+                                        urls_to_add.append(line_str)
+                        except Exception as e:
+                            logging.getLogger("gui").warning("Failed reading dropped file: %s", e)
+                else:
+                    url_str = qurl.toString().strip()
+                    if url_str.startswith(("http://", "https://", "ftp://")):
+                        urls_to_add.append(url_str)
+        elif event.mimeData().hasText():
+            text = event.mimeData().text().strip()
+            for line in text.splitlines():
+                line = line.strip()
+                if line.startswith(("http://", "https://", "ftp://")):
+                    urls_to_add.append(line)
+
+        if urls_to_add:
+            if len(urls_to_add) == 1:
+                from gui.add_download_dialog import DownloadConfirmationDialog
+                url = urls_to_add[0]
+                confirm = DownloadConfirmationDialog(parent=self, url=url)
+                def on_confirmed(result_dict: dict):
+                    task = queue_manager.add(
+                        url=result_dict["url"],
+                        filename=result_dict["filename"],
+                        save_path=result_dict["save_path"],
+                        category=result_dict["category"],
+                        cookies=result_dict["cookies"],
+                        referrer=result_dict["referrer"],
+                        mime=result_dict["mime"],
+                        total_size=result_dict["total_size"],
+                        expected_checksum=result_dict.get("expected_checksum", ""),
+                    )
+                    config.set("download_dir", result_dict["save_path"])
+                    config.set("max_segments", result_dict["segments"])
+                    config.set("speed_limit_kbps", result_dict["speed_limit_kbps"])
+                    queue_manager.start(task.id)
+                confirm.download_confirmed.connect(on_confirmed)
+                confirm.exec()
+            else:
+                count = 0
+                for u in urls_to_add:
+                    queue_manager.add(u)
+                    count += 1
+                QMessageBox.information(self, "Downloads Added", f"Added {count} downloads from dropped items.")
+            event.acceptProposedAction()
 
     # ─── Selection Helpers ──────────────────────────
     def _selected_task_ids(self):
@@ -1374,6 +1534,7 @@ class MainWindow(QMainWindow):
             task.referrer = result_dict["referrer"]
             task.mime = result_dict["mime"]
             task.total_size = result_dict["total_size"]
+            task.expected_checksum = result_dict.get("expected_checksum", "")
 
             # Compute the full destination path
             save_folder = task.save_path or str(config.download_dir)
@@ -1460,6 +1621,8 @@ class MainWindow(QMainWindow):
 
     def _on_task_updated(self, task):
         self._update_status_bar()
+        if task.status == DownloadStatus.COMPLETED and self._auto_action != "none":
+            self._check_auto_finish_action()
 
     def _add_row(self, task):
         row = self.table.rowCount()

@@ -202,10 +202,22 @@ function extractFilename(url) {
   }
 }
 
+// --- Alt-Key Bypass: Holding ALT allows native browser downloading ---
+document.addEventListener("click", (event) => {
+  if (event.altKey) {
+    chrome.runtime.sendMessage({ type: "alt-bypass" });
+    hideOverlay();
+  }
+}, true);
+
 // --- Hover detection with debounce ---
 let hoverTimeout = null;
 
 document.addEventListener("mouseover", (event) => {
+  if (event.altKey) {
+    hideOverlay();
+    return;
+  }
   const anchor = event.target.closest("a[href]");
   if (!anchor || !anchor.href || anchor.href.startsWith("javascript:")) {
     return;

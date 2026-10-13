@@ -42,7 +42,7 @@ class QueueManager:
     def add(self, url: str, filename: str = "",
             save_path: str | None = None, category: str = "general",
             cookies: str = "", referrer: str = "", mime: str = "",
-            total_size: int = 0) -> DownloadTask:
+            total_size: int = 0, expected_checksum: str = "") -> DownloadTask:
         """
         Create a new download task.  If the same URL is already queued /
         downloading / connecting, the existing task is returned instead
@@ -85,6 +85,7 @@ class QueueManager:
                 referrer=referrer,
                 mime=mime,
                 total_size=total_size,
+                expected_checksum=expected_checksum.strip().lower(),
             )
 
             self.tasks[task_id] = task

@@ -74,6 +74,9 @@ class DownloadTask:
     mime: str = ""                # MIME type (e.g., "application/pdf")
     detected_ext: str = ""
     category: str = "general"
+    expected_checksum: str = ""
+    actual_checksum: str = ""
+    checksum_verified: bool | None = None
 
     @property
     def downloaded_bytes(self) -> int:
@@ -102,6 +105,9 @@ class DownloadTask:
             "cookies": self.cookies,
             "mime": self.mime,
             "category": self.category,
+            "expected_checksum": self.expected_checksum,
+            "actual_checksum": self.actual_checksum,
+            "checksum_verified": self.checksum_verified,
         }
 
     @staticmethod
@@ -121,4 +127,7 @@ class DownloadTask:
         task.cookies = d.get("cookies", "")
         task.mime = d.get("mime", "")
         task.category = d.get("category", "general")
+        task.expected_checksum = d.get("expected_checksum", "")
+        task.actual_checksum = d.get("actual_checksum", "")
+        task.checksum_verified = d.get("checksum_verified", None)
         return task

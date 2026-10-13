@@ -326,6 +326,12 @@ class DownloadConfirmationDialog(QDialog):
         speed_widget.setLayout(speed_row)
         _add_row("Speed limit:", speed_widget)
 
+        # Checksum (optional)
+        self.edit_checksum = QLineEdit()
+        self.edit_checksum.setPlaceholderText("Optional (SHA-256, SHA-1, MD5) to verify on completion")
+        self.edit_checksum.setObjectName("editLine")
+        _add_row("Checksum:", self.edit_checksum)
+
         grid.setColumnStretch(1, 1)
         grid.setColumnStretch(2, 0)
         root.addLayout(grid)
@@ -400,6 +406,7 @@ class DownloadConfirmationDialog(QDialog):
             "referrer": self.referrer,
             "mime": self.mime,
             "total_size": self.file_size,
+            "expected_checksum": self.edit_checksum.text().strip().lower(),
         }
         self.download_confirmed.emit(result)
         self.accept()

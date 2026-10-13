@@ -98,29 +98,29 @@ Recognizes media, archives, and documents by content type, not just file extensi
 **Pause and Resume**
 Pause any active transfer instantly and resume it later without re-downloading finished segments.
 
-**Batch URL Import**
-Import text files of direct URLs and queue large batches without adding each link manually.
+**Batch URL Import & Drag-and-Drop**
+Drag-and-drop URLs or `.txt` batch files directly onto DLite to queue downloads instantly.
+
+**Cryptographic Integrity & Checksums**
+Single-pass streaming MD5, SHA-1, and SHA-256 verification. Right-click any completed download or verify directly in the confirmation dialog.
 
 </td>
 <td width="50%" valign="top">
 
-**Download Queue Management**
-Reorder, prioritize, pause, or cancel queued items with a configurable concurrency limit. Auto-promotion starts queued downloads when slots free up.
+**Download Queue & Auto-Actions**
+Reorder and prioritize queue items. Configurable auto-actions on completion: Exit DLite, Sleep Computer, or Shut Down with a safe countdown dialog.
 
-**Modern UI**
-A clean PyQt6 interface with dark and light themes, a live 60-second speed graph, per-segment progress visualizer, and category sidebar.
+**Browser Alt-Key Interception Bypass**
+Hold `Alt` while clicking any download link to let your browser handle the download natively without DLite intercepting.
 
-**Download History & Logging**
-Every completed, failed, or cancelled download is tracked. Structured logging with rotation to `%APPDATA%/DLite/dlite.log`.
+**Modern UI & Multi-Language (i18n)**
+PyQt6 interface with dark/light themes, live 60-second speed chart, per-segment visualizer, and English / Arabic (العربية) support.
 
-**Error Recovery**
+**Error Recovery & Resumability**
 Failed segments retry automatically with exponential backoff before falling back to single-threaded mode.
 
-**High Performance**
-Decoupled engine/GUI architecture so the interface never blocks on network I/O. Segments written directly to disk at target offsets.
-
 **Lightweight Design**
-No background services beyond a local TCP listener. Minimal dependencies: `requests`, `PyQt6`. No Electron, no bundled browser, no bloat.
+No background services beyond a local native messaging host. Minimal dependencies: `requests`, `PyQt6`. No Electron, no bloat.
 
 </td>
 </tr>

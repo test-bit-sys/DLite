@@ -2,5 +2,5 @@
 # NOTE: requests >= 2.32.3 is required for security — 2.31.0 is affected by
 # CVE-2024-35195 (SSL certificate verification bypass in requests.Session),
 # which the download engine relies on directly.
-PyQt6>=6.7.0,<7
-requests>=2.32.3,<3
+PyQt6>=6.11.0,<7
+requests>=2.34.2,<3

@@ -40,8 +40,8 @@ classifiers = [
     "Topic :: Utilities",
 ]
 dependencies = [
-    "PyQt6>=6.7.0,<7",
-    "requests>=2.32.3,<3",
+    "PyQt6>=6.11.0,<7",
+    "requests>=2.34.2,<3",
 ]
 
 [project.urls]

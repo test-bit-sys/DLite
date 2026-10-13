@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "DLite Integration",
+  "version": "1.1.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAl5h9/0iC+LrALt8I/7oruvLkqKfG8dpZ6RC/Nbow4X5WTkvexgzOBG73H6r+1YjlxkLM5q+SJYIm26xk8MhSr+lD3gqDtx2sWsU3CLgOjUFMYzRQm9sF2JyH+Kc97d8ovnBQDac/ShdneUCq21uFFnR615wDW/dBQzJKAQnNs0N3SuZQSry5PA+NADjoV1sFCTHJnJvQEGdkqGHYQxmWtufqbc7CJoiAwJDcOm3kR10NlSHFTySGmnX7gEuAJR8jJRI4nT74xPXPUuXsi1NP0TQ9Rq/YR8PzJl1zQr+sv0x/TEHro7fZo9y9NJXe5Bc6/Lk9ROgORjyZ6dutzCfYUQIDAQAB",
+  "description": "Accelerated download manager integration. Captures downloads and sends them to DLite for faster, resumable downloading.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "downloads",
+    "nativeMessaging",
+    "contextMenus",
+    "storage",
+    "cookies",
+    "webRequest"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ]
+}

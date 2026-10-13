@@ -1,0 +1,9 @@
+{
+  "name": "com.dlite.host",
+  "description": "DLite native messaging host",
+  "type": "stdio",
+  "path": "c:\\Users\\safou\\Downloads\\dlite\\dlite\\native_host\\host.bat",
+  "allowed_origins": [
+    "chrome-extension://mkkjhabahmcbbnhkpkahleljolldhdgf/"
+  ]
+}

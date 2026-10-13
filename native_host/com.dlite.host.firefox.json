@@ -1,0 +1,9 @@
+{
+  "name": "com.dlite.host",
+  "description": "DLite native messaging host",
+  "type": "stdio",
+  "path": "C:\\Users\\safou\\Downloads\\dlite\\dlite\\native_host\\host.bat",
+  "allowed_extensions": [
+    "dlite@safouane02"
+  ]
+}

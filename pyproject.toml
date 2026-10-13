@@ -1,0 +1,57 @@
+[project]
+name = "dlite"
+version = "1.0.1"
+description = "A modern, lightweight, open-source download manager with multi-threaded acceleration, pause/resume, and browser integration."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Safouane Baadoud", email = "safouaneescrow@gmail.com" },
+]
+keywords = ["download-manager", "downloader", "multi-threaded", "pyqt6", "browser-extension"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: X11 Applications :: Qt",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows :: Windows 10",
+    "Operating System :: Microsoft :: Windows :: Windows 11",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "PyQt6>=6.7.0,<7",
+    "requests>=2.32.3,<3",
+]
+
+[project.urls]
+Homepage = "https://github.com/test-bit-sys/DLite"
+Repository = "https://github.com/test-bit-sys/DLite"
+Issues = "https://github.com/test-bit-sys/DLite/issues"
+Changelog = "https://github.com/test-bit-sys/DLite/blob/main/CHANGELOG.md"
+
+# ── Ruff ────────────────────────────────────────────────────────────────
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+exclude = [
+    "build",
+    "dist",
+    "website",
+    "browser-extension",
+    "**/__pycache__",
+]
+
+[tool.ruff.lint]
+# Conservative rule set: syntax errors, undefined names, pyflakes, and
+# obvious pitfalls. Keeps CI green without imposing a full style rewrite.
+select = ["E4", "E7", "E9", "F", "B"]
+
+# ── pytest ───────────────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

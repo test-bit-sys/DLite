@@ -1,0 +1,261 @@
+# ==============================================================================
+# DLite - Professional .gitignore Configuration
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# System & OS Files
+# ------------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# ------------------------------------------------------------------------------
+# Python & Virtual Environments
+# ------------------------------------------------------------------------------
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+bin/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+# Usually these files are written by a python runner when packaging
+*.manifest
+*.spec
+# ...but keep our intentional PyInstaller spec for the installer build
+!installer/DLite.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Django / database files (if any local DBs are created)
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# PEP 582; used by e.g. pdm
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+venv
+ENV
+env
+venv/
+.venv/
+env/
+ENV/
+ENV/local/
+contrib/env/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# ------------------------------------------------------------------------------
+# Node.js & Web Projects (Next.js website & extensions)
+# ------------------------------------------------------------------------------
+# Dependency directories
+node_modules/
+jspm_packages/
+website/node_modules/
+
+# Next.js build output
+.next/
+website/.next/
+out/
+website/out/
+
+# TypeScript cache
+*.tsbuildinfo
+website/*.tsbuildinfo
+
+# Vercel / serverless deployment directories
+.vercel
+
+# Nuxt.js build project
+.nuxt
+
+# Gatsby files
+.cache-loader
+.cache/
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Serverless Webpack files
+.webpack/
+
+# Production build artifacts
+website/build/
+
+# ------------------------------------------------------------------------------
+# IDEs, Editors & Tooling
+# ------------------------------------------------------------------------------
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/code-workspace
+
+# IntelliJ / PyCharm / WebStorm
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+.netrwhist
+*~
+tags
+triptmp
+
+# ------------------------------------------------------------------------------
+# Secrets, Credentials & Local Configuration
+# ------------------------------------------------------------------------------
+.env*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+*.cert
+*.pfx
+credentials.json
+
+# ------------------------------------------------------------------------------
+# Application-Specific Temp/State Files (DLite)
+# ------------------------------------------------------------------------------
+# Runtime / local config changes that shouldn't be pushed
+queue_state.json
+settings.json
+*.db
+*.sqlite
+
+# Local downloaded files / testing downloads
+downloads/
+test_downloads/
+
+# Marketing website (not part of the published repository)
+website/
+
+# Local build artifacts
+DLite-portable-windows-x64.zip
+*.zip
+build_output.log
+scratch/
+t.py
+

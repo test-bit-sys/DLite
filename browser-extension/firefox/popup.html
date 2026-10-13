@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 280px;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: #1e1f24;
+      color: #e6e6e6;
+      padding: 0;
+    }
+    .header {
+      background: linear-gradient(135deg, #1a73e8, #1557b0);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header .logo { width: 28px; height: 28px; background: rgba(255,255,255,0.2); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:16px; }
+    .header h3 { font-size: 15px; font-weight: 600; color: #fff; }
+    .header .version { font-size: 10px; opacity: 0.7; margin-left: auto; }
+    .content { padding: 12px 16px; }
+    .setting-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 0; border-bottom: 1px solid #35363e;
+    }
+    .setting-row:last-child { border-bottom: none; }
+    .setting-label { font-size:13px; display:flex; align-items:center; gap:8px; }
+    .setting-label .icon { font-size:16px; }
+    .toggle { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top:0; left:0; right:0; bottom:0; background:#45464f; border-radius:24px; transition:0.3s; }
+    .slider::before { content:""; position:absolute; height:18px; width:18px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:0.3s; }
+    input:checked + .slider { background: #4d8de0; }
+    input:checked + .slider::before { transform: translateX(20px); }
+    .status-row { display:flex; align-items:center; gap:8px; padding:8px 16px; font-size:11px; color:#8a8b91; background:#24252b; }
+    .status-dot { width:8px; height:8px; border-radius:50%; background:#4caf50; }
+    .status-dot.offline { background:#f44336; }
+    .footer { padding:10px 16px; text-align:center; font-size:11px; color:#5a5b61; border-top:1px solid #35363e; }
+    .footer a { color:#6d8ec0; text-decoration:none; }
+    .footer a:hover { text-decoration:underline; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo"><img src="icons/icon48.png" alt="DLite" width="28" height="28" style="display:block;"></div>
+    <h3>DLite</h3>
+    <span class="version">v1.1</span>
+  </div>
+  <div class="content">
+    <div class="setting-row">
+      <label class="setting-label"><span class="icon">🔄</span> Auto-capture downloads</label>
+      <label class="toggle"><input type="checkbox" id="intercept-toggle" checked><span class="slider"></span></label>
+    </div>
+    <div class="setting-row">
+      <label class="setting-label"><span class="icon">📹</span> Detect media files</label>
+      <label class="toggle"><input type="checkbox" id="media-toggle" checked><span class="slider"></span></label>
+    </div>
+    <div class="setting-row">
+      <label class="setting-label" id="open-app-link" style="cursor:pointer;"><span class="icon">🖥️</span> Open desktop app</label>
+    </div>
+  </div>
+  <div class="status-row">
+    <div class="status-dot" id="status-dot"></div>
+    <span id="status-text">Checking connection...</span>
+  </div>
+  <div class="footer">
+    Make sure <a href="#" id="help-link">native host</a> is installed
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

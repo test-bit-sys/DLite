@@ -1,6 +1,8 @@
 # Contributing to DLite
 
-Thank you for your interest in contributing to DLite! This document outlines the process for contributing code, documentation, bug reports, and feature requests.
+Thank you for your interest in contributing to DLite! 
+
+> **🌟 DLite is an open, community-driven project.** We actively welcome developers of all skill levels, UI designers, testers, and translators from all over the world to help shape the future of this download manager. Whether you want to fix a typo, add a new protocol, or co-maintain a platform port, we'd love to have you onboard!
 
 ## Code of Conduct
 

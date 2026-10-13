@@ -8,7 +8,23 @@ license = { file = "LICENSE" }
 authors = [
     { name = "Safouane Baadoud", email = "safouaneescrow@gmail.com" },
 ]
-keywords = ["download-manager", "downloader", "multi-threaded", "pyqt6", "browser-extension"]
+keywords = [
+    "download-manager",
+    "download-accelerator",
+    "downloader",
+    "multi-threaded",
+    "parallel-downloads",
+    "pyqt6",
+    "browser-extension",
+    "open-source",
+    "desktop-app",
+    "python",
+    "resumable-downloads",
+    "hacktoberfest",
+    "good-first-issue",
+    "community-driven",
+    "collaboration",
+]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: X11 Applications :: Qt",

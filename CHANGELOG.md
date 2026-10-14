@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] — 2026-10-14
+
+### Added
+- **Download Scheduler** (`engine/scheduler.py` & `gui/scheduler_dialog.py`) — automated scheduling engine capable of starting and pausing queues at set times, with an intuitive scheduling dialog and live status bar indicators.
+- **Time-based Bandwidth Throttling Windows** — schedule specific hours (e.g. during daytime/work hours) to enforce bandwidth caps, automatically restoring full speed outside the window (supports overnight intervals).
+- **Clipboard URL Monitoring & Auto-Capture** (`engine/clipboard.py`) — automatically detects downloadable URLs copied to the clipboard and prompts for instant queuing without manual copy-pasting. Toggleable in settings, menu, and system tray.
+- **Batch URL Pattern Generator** (`engine/pattern_generator.py` & `gui/batch_pattern_dialog.py`) — allows adding batches of downloads via URL templates with range wildcards like `[01-20]`, `[1-50:2]`, and `[a-z]` with live count preview and one-click bulk queuing.
+- **Desktop System Tray Completion Notifications** — alerts users with file name and size when transfers finish in the background.
+- **Multi-language (i18n) expansions** — full Arabic (العربية) and English translations for scheduler, batch pattern downloading, clipboard monitor, and notifications.
+- **Unit test suite expansion** (`tests/test_scheduler_and_tools.py`) — tests covering scheduling time windows, throttling state machine, clipboard heuristics, and pattern expansion logic.
+
+---
+
 ## [1.0.1] — 2026-09-23
 
 ### Fixed

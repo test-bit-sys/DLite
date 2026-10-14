@@ -26,7 +26,12 @@ from engine.config import config
 from engine.events import bus
 from engine.models import DownloadStatus
 from engine.queue_manager import queue_manager
+from engine.clipboard import is_downloadable_url
+from engine.scheduler import scheduler
 from gui.add_download_dialog import AddDownloadDialog, DownloadConfirmationDialog
+from gui.scheduler_dialog import SchedulerDialog
+from gui.batch_pattern_dialog import BatchPatternDialog
+from gui.i18n import t
 from gui.theme import stylesheet_for
 
 COLUMNS = ["File Name", "Size", "Progress", "Speed", "Time Left", "Status", "Added"]
@@ -379,6 +384,14 @@ class SettingsDialog(QDialog):
         self.auto_start_check = QCheckBox("Start downloads automatically")
         self.auto_start_check.setChecked(config.get("auto_start_downloads", True))
         gen_layout.addRow("", self.auto_start_check)
+
+        self.clipboard_monitor_check = QCheckBox("Monitor clipboard for downloadable URLs")
+        self.clipboard_monitor_check.setChecked(config.get("monitor_clipboard", True))
+        gen_layout.addRow("", self.clipboard_monitor_check)
+
+        self.notify_complete_check = QCheckBox("Show desktop notification on download completion")
+        self.notify_complete_check.setChecked(config.get("notify_on_complete", True))
+        gen_layout.addRow("", self.notify_complete_check)
 
         self.user_agent_input = QLineEdit(config.get("user_agent", ""))
         self.user_agent_input.setPlaceholderText("Mozilla/5.0 ...")
@@ -775,6 +788,8 @@ class SettingsDialog(QDialog):
         config.set("language", self.language_combo.currentData())
         config.set("minimize_to_tray", self.minimize_tray_check.isChecked())
         config.set("auto_start_downloads", self.auto_start_check.isChecked())
+        config.set("monitor_clipboard", self.clipboard_monitor_check.isChecked())
+        config.set("notify_on_complete", self.notify_complete_check.isChecked())
         config.set("speed_limit_kbps", self.speed_limit_spin.value())
         config.set("chunk_size", self.chunk_size_spin.value() * 1024)
         config.set("retry_attempts", self.retry_spin.value())
@@ -833,6 +848,11 @@ class MainWindow(QMainWindow):
         # Accept Drag and Drop (links, .txt batch files)
         self.setAcceptDrops(True)
 
+        # Clipboard auto-capture monitoring
+        self.clipboard = QApplication.clipboard()
+        self.clipboard.dataChanged.connect(self._on_clipboard_changed)
+        self._last_clipboard_text = ""
+
         # Refresh timer
         self.refresh_timer = QTimer(self)
         self.refresh_timer.timeout.connect(self._refresh_rows)
@@ -848,6 +868,11 @@ class MainWindow(QMainWindow):
         add_action.setShortcut("Ctrl+N")
         add_action.triggered.connect(self._add_download_dialog)
         file_menu.addAction(add_action)
+
+        batch_pattern_action = QAction("&Batch Download (Pattern)...", self)
+        batch_pattern_action.setShortcut("Ctrl+B")
+        batch_pattern_action.triggered.connect(self._open_batch_pattern_dialog)
+        file_menu.addAction(batch_pattern_action)
 
         file_menu.addSeparator()
 
@@ -890,6 +915,18 @@ class MainWindow(QMainWindow):
 
         dl_menu.addSeparator()
 
+        scheduler_action = QAction("⏰ &Download Scheduler...", self)
+        scheduler_action.triggered.connect(self._open_scheduler_dialog)
+        dl_menu.addAction(scheduler_action)
+
+        self.clipboard_menu_action = QAction("📋 Monitor &Clipboard for URLs", self)
+        self.clipboard_menu_action.setCheckable(True)
+        self.clipboard_menu_action.setChecked(config.get("monitor_clipboard", True))
+        self.clipboard_menu_action.triggered.connect(self._toggle_clipboard_monitoring)
+        dl_menu.addAction(self.clipboard_menu_action)
+
+        dl_menu.addSeparator()
+
         auto_menu = dl_menu.addMenu("⚡ When All Downloads Finish")
         self._action_group = QActionGroup(self)
         self._action_group.setExclusive(True)
@@ -926,6 +963,16 @@ class MainWindow(QMainWindow):
         add_btn = QAction(style.standardIcon(QStyle.StandardPixmap.SP_FileDialogNewFolder), "Add URL", self)
         add_btn.triggered.connect(self._add_download_dialog)
         toolbar.addAction(add_btn)
+
+        batch_btn = QAction(style.standardIcon(QStyle.StandardPixmap.SP_FileDialogListView), "Batch Pattern", self)
+        batch_btn.setToolTip("Add Batch Download by Pattern (Ctrl+B)")
+        batch_btn.triggered.connect(self._open_batch_pattern_dialog)
+        toolbar.addAction(batch_btn)
+
+        sched_btn = QAction(style.standardIcon(QStyle.StandardPixmap.SP_FileDialogInfoView), "Scheduler", self)
+        sched_btn.setToolTip("Open Download Scheduler")
+        sched_btn.triggered.connect(self._open_scheduler_dialog)
+        toolbar.addAction(sched_btn)
 
         toolbar.addSeparator()
 
@@ -1068,6 +1115,8 @@ class MainWindow(QMainWindow):
 
         self.status_bar.addWidget(self.status_dl_count)
         self.status_bar.addWidget(self.status_speed)
+        self.status_scheduler = QLabel("")
+        self.status_bar.addWidget(self.status_scheduler)
         self.status_bar.addPermanentWidget(self.status_active)
 
     # ─── System Tray ────────────────────────────────
@@ -1085,6 +1134,15 @@ class MainWindow(QMainWindow):
 
         resume_all_tray = menu.addAction("Resume All")
         resume_all_tray.triggered.connect(lambda: self._batch_action("resume"))
+
+        menu.addSeparator()
+        self.tray_clipboard_action = menu.addAction("Monitor Clipboard")
+        self.tray_clipboard_action.setCheckable(True)
+        self.tray_clipboard_action.setChecked(config.get("monitor_clipboard", True))
+        self.tray_clipboard_action.triggered.connect(self._toggle_clipboard_monitoring)
+
+        sched_tray = menu.addAction("Download Scheduler...")
+        sched_tray.triggered.connect(self._open_scheduler_dialog)
 
         menu.addSeparator()
         quit_action = menu.addAction("Quit")
@@ -1621,8 +1679,11 @@ class MainWindow(QMainWindow):
 
     def _on_task_updated(self, task):
         self._update_status_bar()
-        if task.status == DownloadStatus.COMPLETED and self._auto_action != "none":
-            self._check_auto_finish_action()
+        if task.status == DownloadStatus.COMPLETED:
+            if config.get("notify_on_complete", True):
+                self._notify_completed(task)
+            if self._auto_action != "none":
+                self._check_auto_finish_action()
 
     def _add_row(self, task):
         row = self.table.rowCount()
@@ -1674,6 +1735,7 @@ class MainWindow(QMainWindow):
                         break
 
     def _refresh_rows(self):
+        scheduler.check()
         now = time.monotonic()
         total_speed = 0.0
 
@@ -1755,6 +1817,12 @@ class MainWindow(QMainWindow):
         self.status_dl_count.setText(f"Downloads: {total}")
         self.status_speed.setText(f"Total Speed: {human_size(total_speed)}/s")
         self.status_active.setText(f"Active: {active}")
+        if scheduler.is_enabled:
+            summary = scheduler.get_status_summary()
+            self.status_scheduler.setText(f" | ⏰ {summary}")
+            self.status_scheduler.setStyleSheet("color: #38bdf8; font-weight: 500;")
+        else:
+            self.status_scheduler.setText("")
 
     def _apply_search_filter(self, text):
         text = text.lower()
@@ -1811,3 +1879,67 @@ class MainWindow(QMainWindow):
             )
         else:
             event.accept()
+
+    def _notify_completed(self, task):
+        if hasattr(self, "tray") and self.tray.isVisible():
+            title = t("notify_dl_completed", "Download Completed")
+            desc = t("notify_dl_completed_desc", "has finished downloading.")
+            self.tray.showMessage(
+                title,
+                f"{task.filename} ({human_size(task.total_size)}) {desc}",
+                QSystemTrayIcon.MessageIcon.Information,
+                4000,
+            )
+
+    def _toggle_clipboard_monitoring(self, checked: bool):
+        config.set("monitor_clipboard", checked)
+        if hasattr(self, "clipboard_menu_action"):
+            self.clipboard_menu_action.setChecked(checked)
+        if hasattr(self, "tray_clipboard_action"):
+            self.tray_clipboard_action.setChecked(checked)
+
+    def _on_clipboard_changed(self):
+        if not config.get("monitor_clipboard", True):
+            return
+        try:
+            text = self.clipboard.text().strip()
+            if not text or text == self._last_clipboard_text:
+                return
+            self._last_clipboard_text = text
+            if is_downloadable_url(text):
+                if config.get("clipboard_auto_open_dialog", True):
+                    QTimer.singleShot(150, lambda: self._prompt_clipboard_download(text))
+        except Exception as e:
+            logging.getLogger("gui").debug("Clipboard monitoring exception: %s", e)
+
+    def _prompt_clipboard_download(self, url: str):
+        confirm = DownloadConfirmationDialog(parent=self, url=url)
+
+        def on_confirmed(result_dict: dict):
+            task = queue_manager.add(
+                url=result_dict["url"],
+                filename=result_dict["filename"],
+                save_path=result_dict["save_path"],
+                category=result_dict["category"],
+                cookies=result_dict["cookies"],
+                referrer=result_dict["referrer"],
+                mime=result_dict["mime"],
+                total_size=result_dict["total_size"],
+                expected_checksum=result_dict.get("expected_checksum", ""),
+            )
+            config.set("download_dir", result_dict["save_path"])
+            config.set("max_segments", result_dict["segments"])
+            config.set("speed_limit_kbps", result_dict["speed_limit_kbps"])
+            queue_manager.start(task.id)
+
+        confirm.download_confirmed.connect(on_confirmed)
+        confirm.exec()
+
+    def _open_scheduler_dialog(self):
+        dlg = SchedulerDialog(self)
+        dlg.exec()
+        self._update_status_bar()
+
+    def _open_batch_pattern_dialog(self):
+        dlg = BatchPatternDialog(self)
+        dlg.exec()

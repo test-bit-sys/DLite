@@ -27,7 +27,7 @@ a = Analysis(
     ],
     hookspath=[],
     runtime_hooks=[],
-    excludes=['tkinter', 'matplotlib', 'numpy', 'PIL.ImageQt'],
+    excludes=['tkinter', 'matplotlib', 'numpy', 'PIL.ImageQt', 'PyQt5', 'PySide2', 'PySide6'],
     cipher=block_cipher,
     noarchive=False,
 )

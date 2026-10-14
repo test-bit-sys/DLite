@@ -17,6 +17,20 @@ DEFAULT_SETTINGS = {
     "auto_start_downloads": True,
     "native_host_port": 38271,
     "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+    "monitor_clipboard": True,
+    "clipboard_auto_open_dialog": True,
+    "notify_on_complete": True,
+    "action_on_complete": "none",
+    "scheduler_enabled": False,
+    "scheduler_start_enabled": False,
+    "scheduler_start_time": "02:00",
+    "scheduler_stop_enabled": False,
+    "scheduler_stop_time": "07:00",
+    "scheduler_throttle_enabled": False,
+    "scheduler_throttle_start": "09:00",
+    "scheduler_throttle_end": "18:00",
+    "scheduler_throttle_rate_kbps": 500,
+    "scheduler_action_on_complete": "none",
 }
 
 

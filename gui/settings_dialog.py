@@ -117,6 +117,12 @@ class SettingsDialog(QDialog):
 
         self.chk_minimize_tray = QCheckBox("Minimize to system tray when closing window")
         startup_layout.addWidget(self.chk_minimize_tray)
+
+        self.chk_clipboard = QCheckBox("Monitor clipboard for downloadable URLs")
+        startup_layout.addWidget(self.chk_clipboard)
+
+        self.chk_notify_complete = QCheckBox("Show desktop notification on download completion")
+        startup_layout.addWidget(self.chk_notify_complete)
         layout.addWidget(startup_group)
 
         # Interface
@@ -354,6 +360,8 @@ class SettingsDialog(QDialog):
         """Populate all controls with current config values."""
         self.chk_minimize_tray.setChecked(config.get("minimize_to_tray", True))
         self.chk_auto_start.setChecked(config.get("auto_start_downloads", True))
+        self.chk_clipboard.setChecked(config.get("monitor_clipboard", True))
+        self.chk_notify_complete.setChecked(config.get("notify_on_complete", True))
         self.chk_confirm_dialog.setChecked(True)  # Always enabled by default
 
         self.folder_input.setText(str(config.download_dir))
@@ -394,6 +402,8 @@ class SettingsDialog(QDialog):
         # General
         config.set("minimize_to_tray", self.chk_minimize_tray.isChecked())
         config.set("auto_start_downloads", self.chk_auto_start.isChecked())
+        config.set("monitor_clipboard", self.chk_clipboard.isChecked())
+        config.set("notify_on_complete", self.chk_notify_complete.isChecked())
 
         # Downloads
         new_folder = self.folder_input.text().strip()

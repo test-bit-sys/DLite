@@ -420,11 +420,14 @@ Actual throughput depends on your connection, the target server's per-connection
 - [x] Terminal-styled in-app log viewer
 - [x] Context menus, bulk operations, keyboard shortcuts
 
-**Planned for v1.1+**
+**Shipped in v1.1.0**
 
-- [ ] Built-in checksum verification (SHA-256)
-- [ ] Download scheduler with time-based throttling windows
-- [ ] Clipboard URL monitoring and auto-capture
+- [x] Built-in streaming cryptographic checksum verification (MD5, SHA-1, SHA-256)
+- [x] Download scheduler with time-based throttling windows and overnight support
+- [x] Clipboard URL monitoring and auto-capture for downloadable media, files, and archives
+- [x] Batch URL pattern generator (`[01-20]`, `[1-50:2]`, `[a-z]`) with Cartesian expansion
+- [x] Native desktop system tray completion notifications
+- [x] Safe auto-actions on completion (Shut down, Sleep, Exit) with countdown dialog
 
 **Future exploration**
 

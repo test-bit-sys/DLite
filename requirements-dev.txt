@@ -2,6 +2,6 @@
 # Install with:  pip install -r requirements-dev.txt
 -r requirements.txt
 
-pytest>=8.0,<9          # test suite
-ruff>=0.4,<1            # linting & formatting checks
-pyinstaller>=6.6,<7     # building the Windows executable (installer/DLite.spec)
+pytest>=9.1.1,<10          # test suite
+ruff>=0.17.0,<1            # linting & formatting checks
+pyinstaller>=6.22.3,<7     # building the Windows executable (installer/DLite.spec)

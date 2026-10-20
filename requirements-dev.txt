@@ -3,5 +3,5 @@
 -r requirements.txt
 
 pytest>=9.1.1,<10          # test suite
-ruff>=0.17.0,<1            # linting & formatting checks
+ruff>=0.17.1,<1            # linting & formatting checks
 pyinstaller>=6.22.3,<7     # building the Windows executable (installer/DLite.spec)
